@@ -1,13 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TripCard } from '@/components/cards/TripCard';
-import { mockTrips } from '@/utils/mockData';
+import { JourneyForm } from '@/components/forms/JourneyForm';
+import { mockTrips, Trip, Journey } from '@/utils/mockData';
 import { Route, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 
 export const ActiveTrips: React.FC = () => {
-  const activeTrips = mockTrips.filter(t => t.status === 'running');
+  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+  const [isJourneyFormOpen, setIsJourneyFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const activeTrips = trips.filter(t => t.status === 'running');
+
+  const filteredTrips = activeTrips.filter(
+    (trip) =>
+      trip.truckNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      trip.driverName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAddJourney = (trip: Trip) => {
+    setSelectedTrip(trip);
+    setIsJourneyFormOpen(true);
+  };
+
+  const handleJourneySubmit = (journeyData: {
+    clientId: string;
+    fromLocation: string;
+    toLocation: string;
+    weight: number;
+    ratePerTon: number;
+    freightAmount: number;
+    clientAdvance: number;
+  }) => {
+    if (!selectedTrip) return;
+
+    const newJourney: Journey = {
+      id: `journey-${Date.now()}`,
+      tripId: selectedTrip.id,
+      clientId: journeyData.clientId,
+      clientName: mockTrips.find(t => t.id === selectedTrip.id)?.journeys[0]?.clientName || 'Client',
+      fromLocation: journeyData.fromLocation,
+      toLocation: journeyData.toLocation,
+      weight: journeyData.weight,
+      ratePerTon: journeyData.ratePerTon,
+      freightAmount: journeyData.freightAmount,
+      clientAdvance: journeyData.clientAdvance,
+      createdAt: new Date().toISOString(),
+    };
+
+    setTrips(prevTrips =>
+      prevTrips.map(trip =>
+        trip.id === selectedTrip.id
+          ? {
+              ...trip,
+              journeys: [...trip.journeys, newJourney],
+              totalIncome: trip.totalIncome + journeyData.freightAmount,
+            }
+          : trip
+      )
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -16,7 +71,7 @@ export const ActiveTrips: React.FC = () => {
         <div>
           <h2 className="text-xl font-semibold text-foreground">Active Trips</h2>
           <p className="text-sm text-muted-foreground">
-            {activeTrips.length} trip{activeTrips.length !== 1 ? 's' : ''} currently running
+            {filteredTrips.length} trip{filteredTrips.length !== 1 ? 's' : ''} currently running
           </p>
         </div>
         <Link to="/manager/trips/start">
@@ -34,6 +89,8 @@ export const ActiveTrips: React.FC = () => {
           <Input
             type="search"
             placeholder="Search by truck number, driver..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -44,15 +101,18 @@ export const ActiveTrips: React.FC = () => {
       </div>
 
       {/* Trips Grid */}
-      {activeTrips.length > 0 ? (
+      {filteredTrips.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {activeTrips.map((trip, index) => (
+          {filteredTrips.map((trip, index) => (
             <div
               key={trip.id}
               className="animate-slide-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <TripCard trip={trip} />
+              <TripCard 
+                trip={trip} 
+                onAddJourney={() => handleAddJourney(trip)}
+              />
             </div>
           ))}
         </div>
@@ -69,6 +129,20 @@ export const ActiveTrips: React.FC = () => {
             </Button>
           </Link>
         </div>
+      )}
+
+      {/* Journey Form Dialog */}
+      {selectedTrip && (
+        <JourneyForm
+          tripId={selectedTrip.id}
+          truckNumber={selectedTrip.truckNumber}
+          isOpen={isJourneyFormOpen}
+          onClose={() => {
+            setIsJourneyFormOpen(false);
+            setSelectedTrip(null);
+          }}
+          onSubmit={handleJourneySubmit}
+        />
       )}
     </div>
   );
