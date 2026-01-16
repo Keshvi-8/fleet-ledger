@@ -18,6 +18,7 @@ import { ManagerDashboard } from "@/pages/manager/Dashboard";
 import { ActiveTrips } from "@/pages/manager/trips/ActiveTrips";
 import { StartTrip } from "@/pages/manager/trips/StartTrip";
 import { CompletedTrips } from "@/pages/manager/trips/CompletedTrips";
+import { TripDetails } from "@/pages/manager/trips/TripDetails";
 import { TruckManagement } from "@/pages/manager/master/TruckManagement";
 import { DriverManagement } from "@/pages/manager/master/DriverManagement";
 import { ClientManagement } from "@/pages/manager/master/ClientManagement";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="petrol-pumps" element={<PetrolPumpManagement />} />
               <Route path="trips/active" element={<ActiveTrips />} />
               <Route path="trips/start" element={<StartTrip />} />
+              <Route path="trips/:tripId" element={<TripDetails />} />
               <Route path="trips/completed" element={<CompletedTrips />} />
               <Route path="expenses" element={<ManagerDashboard />} />
               <Route path="transactions" element={<ManagerDashboard />} />

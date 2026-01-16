@@ -4,10 +4,15 @@ import { mockTrips } from '@/utils/mockData';
 import { Route, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const ActiveTrips: React.FC = () => {
+  const navigate = useNavigate();
   const activeTrips = mockTrips.filter(t => t.status === 'running');
+
+  const handleTripClick = (tripId: string) => {
+    navigate(`/manager/trips/${tripId}`);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,7 +57,7 @@ export const ActiveTrips: React.FC = () => {
               className="animate-slide-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <TripCard trip={trip} />
+              <TripCard trip={trip} onClick={() => handleTripClick(trip.id)} />
             </div>
           ))}
         </div>
