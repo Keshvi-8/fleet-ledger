@@ -2,31 +2,23 @@ import React from 'react';
 import { Trip } from '@/utils/mockData';
 import { TripStatusBadge } from '@/components/trips/TripStatusBadge';
 import { formatCurrency, formatDate, formatKm } from '@/utils/formatters';
-import { Truck, User, MapPin, Route, Plus } from 'lucide-react';
+import { Truck, User, MapPin, Calendar, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface TripCardProps {
   trip: Trip;
   onClick?: () => void;
-  onAddJourney?: () => void;
   className?: string;
 }
 
-export const TripCard: React.FC<TripCardProps> = ({ trip, onClick, onAddJourney, className }) => {
+export const TripCard: React.FC<TripCardProps> = ({ trip, onClick, className }) => {
   const latestJourney = trip.journeys[trip.journeys.length - 1];
-
-  const handleAddJourneyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddJourney?.();
-  };
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        'group relative overflow-hidden rounded-xl bg-card p-5 shadow-card transition-all duration-300 hover:shadow-card-hover border border-transparent hover:border-accent/20',
-        onClick && 'cursor-pointer',
+        'group relative overflow-hidden rounded-xl bg-card p-5 shadow-card transition-all duration-300 hover:shadow-card-hover cursor-pointer border border-transparent hover:border-accent/20',
         className
       )}
     >
@@ -87,19 +79,6 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, onClick, onAddJourney,
             </p>
           </div>
         </div>
-
-        {/* Add Journey Button for running trips */}
-        {trip.status === 'running' && onAddJourney && (
-          <Button
-            onClick={handleAddJourneyClick}
-            variant="outline"
-            size="sm"
-            className="w-full gap-2 border-dashed border-accent/50 text-accent hover:bg-accent/10 hover:border-accent"
-          >
-            <Plus className="h-4 w-4" />
-            Add Journey
-          </Button>
-        )}
 
         {trip.status === 'completed' && (
           <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border">
