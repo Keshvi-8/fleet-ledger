@@ -28,6 +28,7 @@ import { PetrolPumpManagement } from "@/pages/manager/master/PetrolPumpManagemen
 // Owner Pages
 import { OwnerDashboard } from "@/pages/owner/Dashboard";
 import { BillsList } from "@/pages/owner/billing/BillsList";
+import ReceivablesReport from "@/pages/owner/reports/ReceivablesReport";
 import { GenerateBills } from "@/pages/owner/billing/GenerateBills";
 
 // Other
@@ -74,7 +75,7 @@ const App = () => (
               <Route path="reports/trucks" element={<OwnerDashboard />} />
               <Route path="reports/profit-loss" element={<OwnerDashboard />} />
               <Route path="reports/expenses" element={<OwnerDashboard />} />
-              <Route path="reports/receivables" element={<OwnerDashboard />} />
+              <Route path="reports/receivables" element={<ReceivablesReport />} />
               <Route path="billing/list" element={<BillsList />} />
               <Route path="billing/generate" element={<GenerateBills />} />
               <Route path="monitoring/trips" element={<OwnerDashboard />} />
