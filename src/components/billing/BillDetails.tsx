@@ -1,7 +1,18 @@
+import { useState } from 'react';
 import { Bill } from '@/utils/billingUtils';
 import { BillStatusBadge } from './BillStatusBadge';
+import { PaymentForm } from './PaymentForm';
+import { PaymentHistory } from './PaymentHistory';
+import { PaymentSummary } from './PaymentSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -10,13 +21,30 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Building2, MapPin, Phone, FileText, Calendar } from 'lucide-react';
+import { Building2, MapPin, Phone, FileText, Calendar, Plus, CreditCard } from 'lucide-react';
+import { Payment, calculatePaymentSummary } from '@/utils/paymentUtils';
+import { BILL_STATUS } from '@/utils/constants';
 
 interface BillDetailsProps {
   bill: Bill;
+  onPaymentAdded?: (billId: string, payment: Payment) => void;
 }
 
-export function BillDetails({ bill }: BillDetailsProps) {
+export function BillDetails({ bill, onPaymentAdded }: BillDetailsProps) {
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
+  const { totalPaid, balance, isPaidInFull } = calculatePaymentSummary(
+    bill.netPayable,
+    bill.payments || []
+  );
+
+  const handlePaymentSubmit = (payment: Payment) => {
+    onPaymentAdded?.(bill.id, payment);
+    setIsPaymentDialogOpen(false);
+  };
+
+  const showPaymentButton = bill.status !== BILL_STATUS.PAID && balance > 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -35,6 +63,18 @@ export function BillDetails({ bill }: BillDetailsProps) {
       </div>
 
       <Separator />
+
+      {/* Payment Summary */}
+      {bill.payments && bill.payments.length > 0 && (
+        <>
+          <PaymentSummary
+            netPayable={bill.netPayable}
+            totalPaid={totalPaid}
+            balance={balance}
+          />
+          <Separator />
+        </>
+      )}
 
       {/* Client Info */}
       <div className="bg-muted/50 p-4 rounded-lg">
@@ -150,16 +190,67 @@ export function BillDetails({ bill }: BillDetailsProps) {
               <span>Net Payable</span>
               <span>{formatCurrency(bill.netPayable)}</span>
             </div>
+            {totalPaid > 0 && (
+              <>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-success">
+                  <span>Payments Received</span>
+                  <span>- {formatCurrency(totalPaid)}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Balance Due</span>
+                  <span className={balance > 0 ? 'text-destructive' : 'text-success'}>
+                    {formatCurrency(balance)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Payment History */}
+      {bill.payments && bill.payments.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payment History
+            </h3>
+          </div>
+          <PaymentHistory payments={bill.payments} />
+        </div>
+      )}
+
+      {/* Record Payment Button */}
+      {showPaymentButton && (
+        <Button onClick={() => setIsPaymentDialogOpen(true)} className="w-full">
+          <Plus className="h-4 w-4 mr-2" />
+          Record Payment
+        </Button>
+      )}
 
       {/* Timeline */}
       <div className="text-xs text-muted-foreground space-y-1">
         <p>Generated: {formatDate(bill.generatedAt)}</p>
         {bill.sentAt && <p>Sent: {formatDate(bill.sentAt)}</p>}
-        {bill.paidAt && <p>Paid: {formatDate(bill.paidAt)}</p>}
+        {bill.paidAt && <p>Fully Paid: {formatDate(bill.paidAt)}</p>}
       </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+          </DialogHeader>
+          <PaymentForm
+            billId={bill.id}
+            maxAmount={balance}
+            onSubmit={handlePaymentSubmit}
+            onCancel={() => setIsPaymentDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

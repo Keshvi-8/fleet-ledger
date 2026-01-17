@@ -1,5 +1,29 @@
 import { Bill } from './billingUtils';
 import { BILL_STATUS } from './constants';
+import { Payment } from './paymentUtils';
+
+// Sample payments for mock data
+const samplePayments: Payment[] = [
+  {
+    id: 'pay-1',
+    billId: 'bill-2',
+    amount: 50000,
+    mode: 'bank',
+    date: '2025-01-02T10:00:00Z',
+    reference: 'NEFT123456',
+    recordedAt: '2025-01-02T10:30:00Z',
+  },
+  {
+    id: 'pay-2',
+    billId: 'bill-2',
+    amount: 51180,
+    mode: 'upi',
+    date: '2025-01-03T14:00:00Z',
+    reference: 'UPI789012345',
+    notes: 'Final payment',
+    recordedAt: '2025-01-03T14:30:00Z',
+  },
+];
 
 export const mockBills: Bill[] = [
   {
@@ -40,6 +64,17 @@ export const mockBills: Bill[] = [
     status: BILL_STATUS.SENT,
     generatedAt: '2025-01-15T10:00:00Z',
     sentAt: '2025-01-15T11:30:00Z',
+    payments: [
+      {
+        id: 'pay-3',
+        billId: 'bill-1',
+        amount: 30000,
+        mode: 'cash',
+        date: '2025-01-16T12:00:00Z',
+        notes: 'Partial payment',
+        recordedAt: '2025-01-16T12:30:00Z',
+      },
+    ],
   },
   {
     id: 'bill-2',
@@ -92,6 +127,7 @@ export const mockBills: Bill[] = [
     generatedAt: '2024-12-31T10:00:00Z',
     sentAt: '2024-12-31T12:00:00Z',
     paidAt: '2025-01-03T14:30:00Z',
+    payments: samplePayments.filter((p) => p.billId === 'bill-2'),
   },
   {
     id: 'bill-3',
@@ -130,5 +166,6 @@ export const mockBills: Bill[] = [
     netPayable: 65880,
     status: BILL_STATUS.GENERATED,
     generatedAt: '2024-12-15T10:00:00Z',
+    payments: [],
   },
 ];
