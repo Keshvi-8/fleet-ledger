@@ -1,10 +1,13 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Bill } from '@/utils/billingUtils';
 import { BillStatusBadge } from './BillStatusBadge';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { calculatePaymentSummary } from '@/utils/paymentUtils';
 import { Building2, Calendar, FileText, Send, Eye } from 'lucide-react';
 import { BILL_STATUS } from '@/utils/constants';
+import { cn } from '@/lib/utils';
 
 interface BillCardProps {
   bill: Bill;
@@ -13,6 +16,13 @@ interface BillCardProps {
 }
 
 export function BillCard({ bill, onView, onSend }: BillCardProps) {
+  const { totalPaid, balance, isPaidInFull } = calculatePaymentSummary(
+    bill.netPayable,
+    bill.payments || []
+  );
+  const percentPaid = bill.netPayable > 0 ? Math.min(100, (totalPaid / bill.netPayable) * 100) : 0;
+  const hasPartialPayment = totalPaid > 0 && !isPaidInFull;
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -50,10 +60,30 @@ export function BillCard({ bill, onView, onSend }: BillCardProps) {
             <p className="font-medium text-warning">{formatCurrency(bill.totalAdvance)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Net Payable</p>
-            <p className="font-semibold text-primary">{formatCurrency(bill.netPayable)}</p>
+            <p className="text-muted-foreground text-xs">
+              {hasPartialPayment ? 'Balance Due' : 'Net Payable'}
+            </p>
+            <p className={cn(
+              'font-semibold',
+              hasPartialPayment ? 'text-destructive' : 'text-primary'
+            )}>
+              {formatCurrency(hasPartialPayment ? balance : bill.netPayable)}
+            </p>
           </div>
         </div>
+
+        {/* Payment Progress */}
+        {totalPaid > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Payment Progress</span>
+              <span className="font-medium text-success">
+                {formatCurrency(totalPaid)} paid
+              </span>
+            </div>
+            <Progress value={percentPaid} className="h-1.5" />
+          </div>
+        )}
 
         <div className="text-xs text-muted-foreground">
           <span>{bill.lineItems.length} journey{bill.lineItems.length !== 1 ? 's' : ''}</span>

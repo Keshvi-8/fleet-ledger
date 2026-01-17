@@ -1,5 +1,6 @@
 import { Trip, Journey, Client } from './mockData';
 import { BILL_STATUS } from './constants';
+import { Payment } from './paymentUtils';
 
 export interface BillLineItem {
   journeyId: string;
@@ -40,6 +41,7 @@ export interface Bill {
   generatedAt: string;
   sentAt?: string;
   paidAt?: string;
+  payments: Payment[];
 }
 
 export interface BillingPeriod {
@@ -254,6 +256,7 @@ export function generateBillForClient(
     netPayable,
     status: BILL_STATUS.GENERATED,
     generatedAt: new Date().toISOString(),
+    payments: [],
   };
 }
 

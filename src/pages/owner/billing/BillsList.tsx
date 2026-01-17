@@ -20,6 +20,7 @@ import { Bill } from '@/utils/billingUtils';
 import { mockBills } from '@/utils/mockBills';
 import { BILL_STATUS } from '@/utils/constants';
 import { formatCurrency } from '@/utils/formatters';
+import { Payment, calculatePaymentSummary } from '@/utils/paymentUtils';
 import { Search, FileText, Send, CheckCircle, Clock, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +62,42 @@ export function BillsList() {
     toast({
       title: 'Bill Sent',
       description: `Bill ${bill.billNumber} sent to ${bill.clientName} via WhatsApp`,
+    });
+  };
+
+  const handlePaymentAdded = (billId: string, payment: Payment) => {
+    setBills((prev) =>
+      prev.map((b) => {
+        if (b.id !== billId) return b;
+        
+        const updatedPayments = [...(b.payments || []), payment];
+        const { balance, isPaidInFull } = calculatePaymentSummary(b.netPayable, updatedPayments);
+        
+        return {
+          ...b,
+          payments: updatedPayments,
+          status: isPaidInFull ? BILL_STATUS.PAID : b.status,
+          paidAt: isPaidInFull ? new Date().toISOString() : b.paidAt,
+        };
+      })
+    );
+    
+    // Update selected bill if it's the one being modified
+    setSelectedBill((prev) => {
+      if (!prev || prev.id !== billId) return prev;
+      const updatedPayments = [...(prev.payments || []), payment];
+      const { isPaidInFull } = calculatePaymentSummary(prev.netPayable, updatedPayments);
+      return {
+        ...prev,
+        payments: updatedPayments,
+        status: isPaidInFull ? BILL_STATUS.PAID : prev.status,
+        paidAt: isPaidInFull ? new Date().toISOString() : prev.paidAt,
+      };
+    });
+    
+    toast({
+      title: 'Payment Recorded',
+      description: `₹${payment.amount.toLocaleString('en-IN')} payment recorded successfully`,
     });
   };
 
@@ -163,7 +200,7 @@ export function BillsList() {
           <DialogHeader>
             <DialogTitle>Invoice Details</DialogTitle>
           </DialogHeader>
-          {selectedBill && <BillDetails bill={selectedBill} />}
+          {selectedBill && <BillDetails bill={selectedBill} onPaymentAdded={handlePaymentAdded} />}
         </DialogContent>
       </Dialog>
     </div>
