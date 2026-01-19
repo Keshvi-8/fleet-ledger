@@ -218,7 +218,7 @@ export function BillDetails({ bill, onPaymentAdded }: BillDetailsProps) {
               Payment History
             </h3>
           </div>
-          <PaymentHistory payments={bill.payments} />
+          <PaymentHistory payments={bill.payments} bill={bill} />
         </div>
       )}
 
