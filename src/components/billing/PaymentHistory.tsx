@@ -1,19 +1,24 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import {
   Payment,
   paymentModeLabels,
   paymentModeIcons,
 } from '@/utils/paymentUtils';
+import { Bill } from '@/utils/billingUtils';
+import { generatePaymentReceipt } from '@/utils/receiptPdfUtils';
 import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
 
 interface PaymentHistoryProps {
   payments: Payment[];
+  bill: Bill;
   className?: string;
 }
 
-export function PaymentHistory({ payments, className }: PaymentHistoryProps) {
+export function PaymentHistory({ payments, bill, className }: PaymentHistoryProps) {
   if (payments.length === 0) {
     return (
       <div className={cn('text-center py-6 text-muted-foreground', className)}>
@@ -21,6 +26,10 @@ export function PaymentHistory({ payments, className }: PaymentHistoryProps) {
       </div>
     );
   }
+
+  const handleDownloadReceipt = (payment: Payment) => {
+    generatePaymentReceipt(payment, bill, payments);
+  };
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -56,6 +65,15 @@ export function PaymentHistory({ payments, className }: PaymentHistoryProps) {
                     )}
                   </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadReceipt(payment)}
+                  className="shrink-0"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Receipt
+                </Button>
               </div>
             </CardContent>
           </Card>
