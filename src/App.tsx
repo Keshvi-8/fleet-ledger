@@ -30,6 +30,7 @@ import { OwnerDashboard } from "@/pages/owner/Dashboard";
 import { BillsList } from "@/pages/owner/billing/BillsList";
 import ReceivablesReport from "@/pages/owner/reports/ReceivablesReport";
 import ProfitLossReport from "@/pages/owner/reports/ProfitLossReport";
+import ExpenseReport from "@/pages/owner/reports/ExpenseReport";
 import { GenerateBills } from "@/pages/owner/billing/GenerateBills";
 
 // Other
@@ -75,7 +76,7 @@ const App = () => (
               <Route index element={<OwnerDashboard />} />
               <Route path="reports/trucks" element={<OwnerDashboard />} />
               <Route path="reports/profit-loss" element={<ProfitLossReport />} />
-              <Route path="reports/expenses" element={<OwnerDashboard />} />
+              <Route path="reports/expenses" element={<ExpenseReport />} />
               <Route path="reports/receivables" element={<ReceivablesReport />} />
               <Route path="billing/list" element={<BillsList />} />
               <Route path="billing/generate" element={<GenerateBills />} />
