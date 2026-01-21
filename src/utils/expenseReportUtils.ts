@@ -1,4 +1,4 @@
-import { Trip, mockTrips, mockTrucks, Truck } from './mockData';
+import { Trip, mockTrips, mockTrucks, Truck, Driver, mockDrivers } from './mockData';
 import { TRIP_STATUS } from './constants';
 import { 
   startOfMonth,
@@ -16,6 +16,21 @@ import {
 import { TimeFrame, getTimeFrameDates, ExpenseBreakdown } from './profitLossUtils';
 
 export type ExpenseCategory = 'diesel' | 'toll' | 'driverAdvance' | 'other';
+
+export interface DriverExpenseData {
+  driverId: string;
+  driverName: string;
+  tripCount: number;
+  totalKm: number;
+  totalDieselQty: number;
+  dieselCost: number;
+  tollExpense: number;
+  driverAdvance: number;
+  otherExpense: number;
+  totalExpenses: number;
+  avgMileage: number;
+  costPerKm: number;
+}
 
 export interface CategoryExpenseData {
   category: ExpenseCategory;
@@ -79,6 +94,7 @@ export interface ExpenseReport {
   summary: ExpenseSummary;
   trends: MonthlyExpenseTrend[];
   byTruck: TruckExpenseData[];
+  byDriver: DriverExpenseData[];
   comparison: PeriodComparison;
   timeFrame: { start: Date; end: Date; label: string };
 }
@@ -210,7 +226,47 @@ function calculateTruckExpenses(trips: Trip[], trucks: Truck[]): TruckExpenseDat
       totalKm,
       costPerKm,
     };
-  }).filter(t => t.tripCount > 0);
+}).filter(t => t.tripCount > 0);
+}
+
+function calculateDriverExpenses(trips: Trip[], drivers: Driver[]): DriverExpenseData[] {
+  const driverMap = new Map<string, Trip[]>();
+  
+  trips.forEach(trip => {
+    const existing = driverMap.get(trip.driverId) || [];
+    existing.push(trip);
+    driverMap.set(trip.driverId, existing);
+  });
+
+  return drivers.map(driver => {
+    const driverTrips = driverMap.get(driver.id) || [];
+    const completedTrips = driverTrips.filter(t => t.status === TRIP_STATUS.COMPLETED || t.status === TRIP_STATUS.LOCKED);
+
+    const dieselCost = completedTrips.reduce((sum, t) => sum + (t.dieselAmount || 0), 0);
+    const tollExpense = completedTrips.reduce((sum, t) => sum + (t.tollExpense || 0), 0);
+    const driverAdvance = driverTrips.reduce((sum, t) => sum + t.driverAdvance, 0);
+    const otherExpense = completedTrips.reduce((sum, t) => sum + (t.otherExpense || 0), 0);
+    const totalExpenses = dieselCost + tollExpense + driverAdvance + otherExpense;
+    const totalKm = completedTrips.reduce((sum, t) => sum + (t.totalKm || 0), 0);
+    const totalDieselQty = completedTrips.reduce((sum, t) => sum + (t.dieselQuantity || 0), 0);
+    const avgMileage = totalDieselQty > 0 ? totalKm / totalDieselQty : 0;
+    const costPerKm = totalKm > 0 ? totalExpenses / totalKm : 0;
+
+    return {
+      driverId: driver.id,
+      driverName: driver.name,
+      tripCount: driverTrips.length,
+      totalKm,
+      totalDieselQty,
+      dieselCost,
+      tollExpense,
+      driverAdvance,
+      otherExpense,
+      totalExpenses,
+      avgMileage,
+      costPerKm,
+    };
+  }).filter(d => d.tripCount > 0);
 }
 
 function getPreviousPeriodDates(timeFrame: TimeFrame, start: Date, end: Date): { start: Date; end: Date } {
@@ -280,7 +336,8 @@ export function generateExpenseReport(
   customStart?: Date,
   customEnd?: Date,
   trucks: Truck[] = mockTrucks,
-  trips: Trip[] = mockTrips
+  trips: Trip[] = mockTrips,
+  drivers: Driver[] = mockDrivers
 ): ExpenseReport {
   const { start, end, label } = getTimeFrameDates(timeFrame, customStart, customEnd);
   const filteredTrips = filterTripsByDateRange(trips, start, end);
@@ -288,12 +345,14 @@ export function generateExpenseReport(
   const summary = calculateExpenseSummary(filteredTrips);
   const trends = calculateMonthlyTrends(trips, start, end);
   const byTruck = calculateTruckExpenses(filteredTrips, trucks);
+  const byDriver = calculateDriverExpenses(filteredTrips, drivers);
   const comparison = calculateComparison(trips, timeFrame, start, end);
 
   return {
     summary,
     trends,
     byTruck,
+    byDriver,
     comparison,
     timeFrame: { start, end, label },
   };
