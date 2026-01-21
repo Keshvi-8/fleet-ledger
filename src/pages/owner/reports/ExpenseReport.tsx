@@ -14,6 +14,7 @@ import { ExpenseCategoryBreakdown } from '@/components/reports/ExpenseCategoryBr
 import { ExpenseTrendsChart } from '@/components/reports/ExpenseTrendsChart';
 import { ExpenseByTruckTable } from '@/components/reports/ExpenseByTruckTable';
 import { ExpenseComparisonCard } from '@/components/reports/ExpenseComparisonCard';
+import { DriverExpenseBreakdown } from '@/components/reports/DriverExpenseBreakdown';
 
 const TIME_FRAME_OPTIONS = [
   { value: 'this_month', label: 'This Month' },
@@ -154,6 +155,9 @@ export default function ExpenseReport() {
 
       {/* Trends Chart */}
       <ExpenseTrendsChart trends={report.trends} />
+
+      {/* Driver Expense Breakdown */}
+      <DriverExpenseBreakdown driverData={report.byDriver} />
 
       {/* Truck Table */}
       <ExpenseByTruckTable truckData={report.byTruck} />
